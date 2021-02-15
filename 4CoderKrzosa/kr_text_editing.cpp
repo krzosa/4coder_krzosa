@@ -3,6 +3,7 @@
 1. Copy and paste this file into your custom layer (4coder_default_bindings.cpp by default) below the line: "#include "4coder_default_include.cpp""
 2. Bind commands to keybindings
 3. Done! */
+#define KR_TEXT_EDITING
 
 struct selected_lines_info
 {

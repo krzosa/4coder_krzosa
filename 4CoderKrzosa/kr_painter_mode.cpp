@@ -1,10 +1,10 @@
-/* Guide 
+/* Guide
 
 1. You need to #include this file in your custom layer (4coder_default_bindings.cpp by default) below the line: "#include "4coder_default_include.cpp""
 
- 2. In your "void custom_layer_init(Application_Links *app)", 
+2. In your "void custom_layer_init(Application_Links *app)",
 set "painter_whole_screen_render_caller" as as HookID_WholeScreenRenderCaller
-like this: 
+like this:
 
 """
     // NOTE(allen): default hooks and command maps
@@ -33,8 +33,9 @@ struct Painter
   i64 brush_strokes_size;
   i32 brush_size;
   i32 brush_size_control;
+  Managed_ID color;
 };
-global Painter global_painter = {false, false, 0, 0, 20, 5};
+global Painter global_painter = {false, false, 0, 0, 20, 5, defcolor_text_default};
 
 function void
 painter_init()
@@ -85,11 +86,11 @@ painter_whole_screen_render_caller(Application_Links *app, Frame_Info frame_info
       // Special case for a single dot in the wild
       if(p->brush_strokes[j-1].mouse_l == 0 || p->brush_strokes[j].mouse_l == 1)
       {
-        Rect_f32 rect = {(f32)p->brush_strokes[j].p.x - (p->brush_size / 2), 
-          (f32)p->brush_strokes[j].p.y - (p->brush_size / 2), 
-          (f32)p->brush_strokes[j].p.x + p->brush_size / 2, 
+        Rect_f32 rect = {(f32)p->brush_strokes[j].p.x - (p->brush_size / 2),
+          (f32)p->brush_strokes[j].p.y - (p->brush_size / 2),
+          (f32)p->brush_strokes[j].p.x + p->brush_size / 2,
           (f32)p->brush_strokes[j].p.y + p->brush_size / 2};
-        draw_rectangle_fcolor(app, rect, 10.f, fcolor_id(defcolor_text_default));
+        draw_rectangle_fcolor(app, rect, 10.f, fcolor_id(global_painter.color));
       }
       // Skip if mouse not pressed
       if(p->brush_strokes[j-1].mouse_l == false || p->brush_strokes[j].mouse_l == false)
@@ -98,9 +99,9 @@ painter_whole_screen_render_caller(Application_Links *app, Frame_Info frame_info
       Vec2_i32 minP = p->brush_strokes[j-1].p;
       Vec2_i32 maxP = p->brush_strokes[j].p;
       
-      // Drawing line algorithm, fill every pixel with a rectangle ! ;> 
-      bool steep = false; 
-      if (abs(minP.x-maxP.x) < abs(minP.y-maxP.y)) 
+      // Drawing line algorithm, fill every pixel with a rectangle ! ;>
+      bool steep = false;
+      if (abs(minP.x-maxP.x) < abs(minP.y-maxP.y))
       {
         i32 temp = minP.x;
         minP.x = minP.y;
@@ -109,8 +110,8 @@ painter_whole_screen_render_caller(Application_Links *app, Frame_Info frame_info
         temp = maxP.x;
         maxP.x = maxP.y;
         maxP.y = temp;
-        steep = true; 
-      } 
+        steep = true;
+      }
       
       if(minP.x > maxP.x)
       {
@@ -121,23 +122,23 @@ painter_whole_screen_render_caller(Application_Links *app, Frame_Info frame_info
       
       for(i32 x = minP.x; x < maxP.x; x++)
       {
-        f32 t = (x - minP.x ) / (f32)(maxP.x - minP.x); 
-        i32 y = (i32)(minP.y * (1. - t) + maxP.y*t); 
+        f32 t = (x - minP.x ) / (f32)(maxP.x - minP.x);
+        i32 y = (i32)(minP.y * (1. - t) + maxP.y*t);
         Vec2_i32 pos;
         if(steep)
         {
           pos = {y, x};
         }
-        else 
+        else
         {
           pos = {x, y};
         }
         
-        Rect_f32 rect = {(f32)pos.x - (p->brush_size / 2), 
-          (f32)pos.y - (p->brush_size / 2), 
-          (f32)pos.x + p->brush_size / 2, 
+        Rect_f32 rect = {(f32)pos.x - (p->brush_size / 2),
+          (f32)pos.y - (p->brush_size / 2),
+          (f32)pos.x + p->brush_size / 2,
           (f32)pos.y + p->brush_size / 2};
-        draw_rectangle_fcolor(app, rect, 10.f, fcolor_id(defcolor_text_default));
+        draw_rectangle_fcolor(app, rect, 10.f, fcolor_id(global_painter.color));
       }
       
     }

@@ -2,7 +2,7 @@ b32 global_compilation_view_expanded = 0;
 View_ID global_compilation_view = 0;
 f32 global_compilation_small_buffer_size = 4.f;
 
-CUSTOM_COMMAND_SIG(f4_toggle_compilation_expand) // 
+CUSTOM_COMMAND_SIG(expand_compilation_window) 
 CUSTOM_DOC("Expand the compilation window.") 
 {
   Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
@@ -11,10 +11,15 @@ CUSTOM_DOC("Expand the compilation window.")
   if(global_compilation_view_expanded ^= 1)
   {
     view_set_split_pixel_size(app, global_compilation_view, (i32)(metrics.line_height*32.f));
+    View_ID view = get_or_open_build_panel(app);
+    if (view != 0){
+      view_set_active(app, view);
+    }
   }
   else
   {
     view_set_split_pixel_size(app, global_compilation_view, (i32)(metrics.line_height*global_compilation_small_buffer_size));
+    change_active_panel_send_command(app, 0);
   }
 }
 
