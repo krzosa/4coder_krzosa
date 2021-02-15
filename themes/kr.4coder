@@ -34,7 +34,7 @@ SECONDARY = LIGHT0;
 TERTIARY = SHINY_BLUE;
 FOURTH = DIMMED_PINK;
 
-compilation_buffer_color = DARK0;
+defcolor_compilation_buffer = DARK0;
 defcolor_back = DARK1;
 defcolor_bar = TRANSPARENT_LIGHT;
 defcolor_base = GRAY; // Buffer bar(top or bottom) text

@@ -16,6 +16,7 @@ CUSTOM_ID( colors, defcolor_type );
 CUSTOM_ID( colors, defcolor_function );
 CUSTOM_ID( colors, defcolor_macro );
 CUSTOM_ID( colors, defcolor_selection_highlight );
+CUSTOM_ID( colors, defcolor_compilation_buffer );
 
 #if !defined(META_PASS)
 #include "generated/managed_id_metadata.cpp"

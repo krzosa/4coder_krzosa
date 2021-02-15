@@ -139,13 +139,36 @@ RenderBuffer(Application_Links *app, View_ID view_id, Face_ID face_id,
   draw_set_clip(app, prev_clip);
 }
 
+/* 
 function Rect_f32
-DrawBGAndMargin(Application_Links *app, View_ID view_id, b32 is_active_view){
+(Application_Links *app, View_ID view_id, b32 is_active_view){
   u64 config_margin_size = def_get_config_u64(app, vars_save_string_lit("margin_size"));
   FColor margin_color = get_panel_margin_color(is_active_view?UIHighlight_Active:UIHighlight_None);
   Rect_f32 region = draw_background_and_margin(app, view_id, margin_color, fcolor_id(defcolor_back), (f32)config_margin_size);
   return region;
 }
+ */
+
+function Rect_f32
+DrawBGAndMargin(Application_Links *app, View_ID view_id, 
+                Buffer_ID buffer, b32 is_active_view){
+  FColor margin_color = get_panel_margin_color(is_active_view?UIHighlight_Active:UIHighlight_None);
+  u64 config_margin_size = def_get_config_u64(app, vars_save_string_lit("margin_size"));
+  
+  Scratch_Block scratch(app);
+  String_Const_u8 string = push_buffer_base_name(app, scratch, buffer);
+  b32 matches = string_match(string, string_u8_litexpr("*compilation*"));
+  
+  
+  FColor back = fcolor_id(defcolor_back);
+  if(matches) back = fcolor_id(defcolor_compilation_buffer);
+  
+  Rect_f32 region = draw_background_and_margin(app, view_id, margin_color, 
+                                               back, (f32)config_margin_size);
+  
+  return region;
+}
+
 
 function void
 RenderCaller(Application_Links *app, Frame_Info frame_info, View_ID view_id){
@@ -153,10 +176,10 @@ RenderCaller(Application_Links *app, Frame_Info frame_info, View_ID view_id){
   View_ID active_view = get_active_view(app, Access_Always);
   b32 is_active_view = (active_view == view_id);
   
-  Rect_f32 region = DrawBGAndMargin(app, view_id, is_active_view);
+  Buffer_ID buffer = view_get_buffer(app, view_id, Access_Always);
+  Rect_f32 region = DrawBGAndMargin(app, view_id, buffer, is_active_view);
   Rect_f32 prev_clip = draw_set_clip(app, region);
   
-  Buffer_ID buffer = view_get_buffer(app, view_id, Access_Always);
   Face_ID face_id = get_face_id(app, buffer);
   Face_Metrics face_metrics = get_face_metrics(app, face_id);
   f32 line_height = face_metrics.line_height;
