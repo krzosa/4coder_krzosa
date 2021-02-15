@@ -9,7 +9,7 @@
 #if !defined(FCODER_DEFAULT_BINDINGS_CPP)
 #define FCODER_DEFAULT_BINDINGS_CPP
 
-static float global_margin = 0;
+static float global_margin = 0.f;
 #include "4coder_default_include.cpp"
 
 CUSTOM_ID( colors, defcolor_type );
@@ -123,7 +123,7 @@ custom_layer_init(Application_Links *app){
 	//setup_essential_mapping(&framework_mapping, global_map_id, file_map_id, code_map_id);
   SetupEssentialMapping(&framework_mapping, global_map_id, file_map_id, code_map_id);
   
-  brush_strokes = (brush_in_time *)heap_allocate(&global_heap, sizeof(brush_in_time) * max_size_of_array);
+  
 }
 
 #endif //FCODER_DEFAULT_BINDINGS
