@@ -1,0 +1,97 @@
+DARKJBlow = 0xFF041818;
+DARK0	= 0xff111111;
+DARK1	= 0xff222222;
+DARK2	= 0xff504945;
+DARK3	= 0xff665c54;
+DARK4	= 0xff7c6f64;
+
+GRAY	= 0xff928374;
+
+LIGHT0	= 0xfffbf1c7;
+LIGHT1	= 0xffebdbb2;
+LIGHT2	= 0xffd5c4a1;
+LIGHT3	= 0xffbdae93;
+LIGHT4	= 0xffa89984;
+
+TRANSPARENT_LIGHT = 0x22666666;
+
+PINK = 0xffFB3483;
+BLUE	= 0xff83a598;
+AQUA	= 0xff8ec07c;
+PURPLE	= 0xffd3869b;
+GREEN	= 0xff83FB34;
+RED	= 0xfffb4934;
+SHINY_BLUE	= 0xff36B8C7;
+ORANGE	= 0xfffe8019;
+YELLOW	= 0xffFBAD34;
+DIMMED_YELLOW = 0xFFDB9F51;
+DIMMED_PINK   = 0xFFEBA991;
+CREAM = 0xFFD3B58D;
+
+BG_COMPLIMENT = CREAM;
+PRIMARY = RED;
+SECONDARY = LIGHT0;
+TERTIARY = SHINY_BLUE;
+FOURTH = DIMMED_PINK;
+
+compilation_buffer_color = DARK0;
+defcolor_back = DARK1;
+defcolor_bar = TRANSPARENT_LIGHT;
+defcolor_base = GRAY; // Buffer bar(top or bottom) text
+defcolor_margin = DARK1;
+//defcolor_margin_hover = 0xFF333333;
+defcolor_margin_active = DARK2;
+
+// lister
+defcolor_list_item = {defcolor_margin, defcolor_back};
+defcolor_list_item_hover = {defcolor_margin_hover, defcolor_margin};
+defcolor_list_item_active = {defcolor_margin_active, defcolor_margin_active};
+defcolor_pop1 = PRIMARY; // lister text that suggest what kind of lister it is
+
+defcolor_mark = 0xffffffff;
+defcolor_cursor = {LIGHT0,LIGHT1};
+defcolor_highlight_cursor_line = TRANSPARENT_LIGHT; // highlight color of cursor line
+defcolor_highlight = 0x44fb4934; // selection color
+defcolor_at_highlight = 0xDDFFAA7D; // Text color on selection
+defcolor_at_cursor = RED0; // ??
+
+
+//defcolor_text_default = 0xffb99468; // TEXT reddish
+defcolor_text_default = BG_COMPLIMENT;
+
+defcolor_comment = GRAY;
+defcolor_comment_pop = {LIGHT1, RED};
+defcolor_keyword = PRIMARY;
+defcolor_str_constant = FOURTH;
+defcolor_char_constant = defcolor_str_constant;
+defcolor_int_constant = defcolor_str_constant;
+defcolor_float_constant = defcolor_str_constant;
+defcolor_bool_constant = defcolor_str_constant;
+defcolor_include = defcolor_str_constant;
+defcolor_preproc = PRIMARY;
+defcolor_special_character = RED; // ??
+defcolor_ghost_character = RED; // backslashes when you reach character limit for screen and it breaks a line
+
+defcolor_paste = 0xFFFFBB00;
+defcolor_undo = 0xFF80005D;
+	
+defcolor_highlight_junk = 0x22d3869b; // ?
+defcolor_highlight_white = 0x228f3f71; // ?
+
+defcolor_bar_active = 0xFFA8A8A8; // ?
+defcolor_pop2 = PRIMARY;//color of the star which suggests that buffer is not saved
+
+defcolor_back_cycle = {0x0CA00000, 0x0800A000, 0x080000A0, 0x08A0A000};
+defcolor_text_cycle = {0xFFA00000, 0xFF00A000, 0xFF0020B0, 0xFFA0A000};
+
+defcolor_line_numbers_back = defcolor_back;
+defcolor_line_numbers_text = defcolor_base;
+
+defcolor_type = PRIMARY;
+defcolor_function = SECONDARY;
+defcolor_macro = TERTIARY;
+defcolor_selection_highlight = TERTIARY;
+
+
+vertical_scope_annotation_text = DARK2;
+vertical_scope_annotation_highlight = DARK4;

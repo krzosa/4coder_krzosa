@@ -1,0 +1,11 @@
+*.exe
+*.dll
+*.txt
+*.pdb
+*.ttf
+
+mac-bindings.4coder
+
+custom/
+audio_test/
+themes/theme-*
