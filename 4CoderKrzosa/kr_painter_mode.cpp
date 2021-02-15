@@ -15,10 +15,8 @@ like this:
 """
 
 3. Bind painting commands to hotkeys (Those are at the end of the file)
-4. Done!
-
-
- */
+4. Done!*/
+#define KR_PAINTER_MODE
 
 struct brush_in_time
 {
