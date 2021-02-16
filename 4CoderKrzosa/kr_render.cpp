@@ -87,12 +87,13 @@ HighlightSelectionMatches(Application_Links *app, View_ID view,
     string_match_list_filter_flags(&matches, must_have_flags, 0);
     
     for (String_Match *node = matches.first; node != 0; node = node->next){
-      /* 
-            F4_RenderRangeHighlight(app, view, text_layout_id, node->range, F4_RangeHighlightKind_Underline);  
-       */
-      draw_character_block(app, text_layout_id, 
-                           node->range, 0, 
-                           fcolor_resolve(fcolor_change_alpha(fcolor_id(defcolor_selection_highlight), global_highlight_transparency)));
+      if(selection == node->range)
+      {
+        F4_RenderRangeHighlight(app, view, text_layout_id, node->range, F4_RangeHighlightKind_Underline);  
+      }
+      else 
+        draw_character_block(app, text_layout_id, node->range, 0, 
+                             fcolor_resolve(fcolor_change_alpha(fcolor_id(defcolor_selection_highlight), global_highlight_transparency)));
     }
   }
   else F4_HighlightCursorMarkRange(app, view, text_layout_id, cursor_pos, mark_pos);

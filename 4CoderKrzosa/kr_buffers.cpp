@@ -91,3 +91,51 @@ CUSTOM_DOC("Open theme file")
 {
   open_file_in_4coder_dir(app, SCu8("themes/kr.4coder"));
 }
+
+function bool is_lower_case(char c){ return(c >= 'a' && c <= 'z'); }
+function bool is_upper_case(char c){ return(c >= 'A' && c <= 'Z'); }
+char to_lower_case_c(char c){ if(is_upper_case(c)) { c += 32; } return c; }
+char to_upper_case_c(char c){ if(is_lower_case(c)) { c -= 32; } return c; }
+function void snake_case_to_pascal_case(String_Const_u8 *string)
+{
+  u64 length = string->size;
+  string->str[0] = to_upper_case_c(string->str[0]);
+  u64 deleted_letters = 0 ;
+  for(u64 i = 0; string->str[i] != '\0'; i++)
+  {
+    if(string->str[i] == '_')
+    {
+      if(i > 0 && is_upper_case(string->str[i-1])) continue;
+      if(string->str[i+1] != '\0' && is_upper_case(string->str[i+1])) continue;
+      
+      string->str[i+1] = to_upper_case_c(string->str[i+1]);
+      block_copy(&string->str[i], &string->str[i+1], length - i);
+      deleted_letters+=1;
+    }
+  }
+  string->size -= deleted_letters;
+}
+
+CUSTOM_COMMAND_SIG(snake_case_to_pascal_case)
+CUSTOM_DOC("Open theme file")
+{
+  View_ID view = get_active_view(app, Access_Always);
+  Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
+  Scratch_Block scratch(app);
+  Token_Array token_array = get_token_array_from_buffer(app, buffer);
+  for(int i = 0; i < token_array.count; i++)
+  {
+    Token *token = &token_array.tokens[i];
+    String_Const_u8 lexeme = push_token_lexeme(app, scratch, buffer, token);
+    Code_Index_Note *note = code_index_note_from_string(lexeme);
+    if(note != 0)
+    {
+      if(note->file && note->note_kind == CodeIndexNote_Function)
+      {
+        Range_i64 range = {token->pos, token->pos + token->size};
+        snake_case_to_pascal_case(&lexeme);
+        buffer_replace_range(app,buffer,range,lexeme);
+      }
+    }
+  }
+}
