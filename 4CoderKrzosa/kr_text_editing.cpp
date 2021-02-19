@@ -62,6 +62,24 @@ CUSTOM_DOC("Delete selected lines up")
   
 }
 
+CUSTOM_COMMAND_SIG(cut_selected_lines)
+CUSTOM_DOC("Cut selected lines up")
+{
+	View_ID view = get_active_view(app, Access_Always);
+	Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
+  
+  selected_lines_info selection = get_selected_lines_info(app, view, buffer);
+  
+  Range_i64 range = selection.entire_selected_lines_pos;
+  
+  range.start = clamp_bot(0, range.start);
+  if(clipboard_post_buffer_range(app, 0, buffer, range))
+  {
+    buffer_replace_range(app, buffer, range, string_u8_litexpr(""));
+    view_set_cursor(app, view, seek_line_col(selection.min_line, 0));
+  }
+}
+
 CUSTOM_COMMAND_SIG(duplicate_multiple_lines_down)
 CUSTOM_DOC("Duplicate selected lines down")
 {

@@ -2,7 +2,7 @@
 // i32 max_count = first_index + lister->visible_count + 4;
 // count = clamp_top(lister->filtered.count, max_count);
 
-// TODO(Krzosa): 
+// TODO(Krzosa):
 // @replace_in_range needs an identifier variant!
 // @
 
@@ -123,7 +123,6 @@ custom_layer_init(Application_Links *app){
 #endif
 	//setup_essential_mapping(&framework_mapping, global_map_id, file_map_id, code_map_id);
   SetupEssentialMapping(&framework_mapping, global_map_id, file_map_id, code_map_id);
-  
   
 }
 

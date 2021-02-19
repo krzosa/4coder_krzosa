@@ -11,10 +11,7 @@ CUSTOM_DOC("Expand the compilation window.")
   if(global_compilation_view_expanded ^= 1)
   {
     view_set_split_pixel_size(app, global_compilation_view, (i32)(metrics.line_height*32.f));
-    View_ID view = get_or_open_build_panel(app);
-    if (view != 0){
-      view_set_active(app, view);
-    }
+    view_set_active(app, global_compilation_view);
   }
   else
   {
@@ -96,7 +93,7 @@ function bool is_lower_case(char c){ return(c >= 'a' && c <= 'z'); }
 function bool is_upper_case(char c){ return(c >= 'A' && c <= 'Z'); }
 char to_lower_case_c(char c){ if(is_upper_case(c)) { c += 32; } return c; }
 char to_upper_case_c(char c){ if(is_lower_case(c)) { c -= 32; } return c; }
-function void snake_case_to_pascal_case(String_Const_u8 *string)
+function void SnakeCaseToPascalCase(String_Const_u8 *string)
 {
   u64 length = string->size;
   string->str[0] = to_upper_case_c(string->str[0]);
@@ -133,9 +130,21 @@ CUSTOM_DOC("Open theme file")
       if(note->file && note->note_kind == CodeIndexNote_Function)
       {
         Range_i64 range = {token->pos, token->pos + token->size};
-        snake_case_to_pascal_case(&lexeme);
+        SnakeCaseToPascalCase(&lexeme);
         buffer_replace_range(app,buffer,range,lexeme);
       }
     }
   }
+}
+
+
+CUSTOM_COMMAND_SIG(explorer_here)
+CUSTOM_DOC("runs explorer in current dir")
+{
+  Scratch_Block scratch(app);
+  Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
+  Buffer_Identifier id = buffer_identifier(buffer);
+  String_Const_u8 hot = push_hot_directory(app, scratch);
+  String_Const_u8 cmd = SCu8("explorer.exe .");
+  exec_system_command(app, global_compilation_view, id, hot, cmd, 0);
 }
