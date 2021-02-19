@@ -148,3 +148,26 @@ CUSTOM_DOC("runs explorer in current dir")
   String_Const_u8 cmd = SCu8("explorer.exe .");
   exec_system_command(app, global_compilation_view, id, hot, cmd, 0);
 }
+
+
+CUSTOM_COMMAND_SIG(keyboard_macro_switch)
+CUSTOM_DOC("Start stop macro")
+{
+  if (get_current_input_is_virtual(app)) return;
+  if(global_keyboard_macro_is_recording)
+  {
+    Buffer_ID buffer = get_keyboard_log_buffer(app);
+    global_keyboard_macro_is_recording = false;
+    i64 end = buffer_get_size(app, buffer);
+    Buffer_Cursor cursor = buffer_compute_cursor(app, buffer, seek_pos(end));
+    Buffer_Cursor back_cursor = buffer_compute_cursor(app, buffer, seek_line_col(cursor.line - 1, 1));
+    global_keyboard_macro_range.one_past_last = back_cursor.pos;
+  }
+  else
+  {
+    Buffer_ID buffer = get_keyboard_log_buffer(app);
+    global_keyboard_macro_is_recording = true;
+    global_keyboard_macro_range.first = buffer_get_size(app, buffer);
+  }
+}
+
