@@ -47,20 +47,24 @@ keys_global = {
     { "project_fkey_command", "F8" },
     { "project_fkey_command", "F9" },
     { "project_fkey_command", "F10" },
-    { "debugger_breakpoint_at_cursor", "F9", "Control" },
-    { "debugger_remove_breakpoint_at_cursor", "F9", "Shift" },
+    { "project_fkey_command", "F11" },
+    { "project_fkey_command", "F12" },
     { "debugger_start_debug", "F5", "Control" },
     { "debugger_stop_debug", "F5", "Shift" },
     { "debugger_continue", "F6", "Control" },
+    { "debugger_breakpoint_at_cursor", "F9", "Control" },
+    { "debugger_remove_breakpoint_at_cursor", "F9", "Shift" },
+    { "split_fullscreen_mode", "F11", "Control" },
+    { "explorer_here", "F12", "Shift" },
     { "debugger_open_file_at_cursor", "F12", "Control" },
-    { "split_fullscreen_mode", "F11" },
-    { "explorer_here", "F12" },
+
+
+
     { "load_theme_current_buffer", "T", "Control", "Shift", "Alt" },
     //{ "painter_mode_switch", "F12", "P" }
     //{ "painter_mode_clear", "F12", "C" },
     //{ "painter_mode_brush_size_lower", "F12", "LeftBracket" },
     //{ "painter_mode_brush_size_upper", "F12", "RightBracket" },
-   // { "split_fullscreen_mode", "F12", "F" },
 };
 
 keys_file = {
