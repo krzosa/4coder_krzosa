@@ -66,29 +66,6 @@ InitPanels(Application_Links *app) // Needs to be called in the startup function
   view_set_active(app, view);
 }
 
-function void open_file_in_4coder_dir(Application_Links *app, String_Const_u8 file)
-{
-  View_ID active_view = get_active_view(app, Access_Always);
-  Scratch_Block scratch(app);
-  String_Const_u8 binary = system_get_path(scratch, SystemPath_Binary);
-  String_u8 path = string_u8_push(scratch, 255);
-  string_append(&path, binary);
-  string_append(&path, file);
-  view_open_file(app, active_view, path.string, false);
-}
-
-CUSTOM_COMMAND_SIG(open_bindings)
-CUSTOM_DOC("Open hotkey file")
-{
-  open_file_in_4coder_dir(app, SCu8("bindings.4coder"));
-}
-
-CUSTOM_COMMAND_SIG(open_theme)
-CUSTOM_DOC("Open theme file")
-{
-  open_file_in_4coder_dir(app, SCu8("themes/kr.4coder"));
-}
-
 function bool is_lower_case(char c){ return(c >= 'a' && c <= 'z'); }
 function bool is_upper_case(char c){ return(c >= 'A' && c <= 'Z'); }
 char to_lower_case_c(char c){ if(is_upper_case(c)) { c += 32; } return c; }
@@ -136,19 +113,6 @@ CUSTOM_DOC("Open theme file")
     }
   }
 }
-
-
-CUSTOM_COMMAND_SIG(explorer_here)
-CUSTOM_DOC("runs explorer in current dir")
-{
-  Scratch_Block scratch(app);
-  Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
-  Buffer_Identifier id = buffer_identifier(buffer);
-  String_Const_u8 hot = push_hot_directory(app, scratch);
-  String_Const_u8 cmd = SCu8("explorer.exe .");
-  exec_system_command(app, global_compilation_view, id, hot, cmd, 0);
-}
-
 
 CUSTOM_COMMAND_SIG(keyboard_macro_switch)
 CUSTOM_DOC("Start stop macro")

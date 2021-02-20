@@ -29,6 +29,7 @@ CUSTOM_ID( colors, defcolor_compilation_buffer );
 #include "kr_painter_mode.cpp"
 #include "kr_fullscreen.cpp"
 #include "kr_search.cpp"
+#include "kr_processes.cpp"
 
 CUSTOM_COMMAND_SIG(AppStart)
 CUSTOM_DOC("Default command for responding to a startup event")

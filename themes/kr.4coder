@@ -1,17 +1,3 @@
-// TODO:
-// Replace_in_range_identifier
-//remedybg.exe open-session session-filename
-//remedybg.exe open-file filename [line-number]
-//remedybg.exe close-file filename
-//remedybg.exe start-debugging
-//remedybg.exe stop-debugging
-//remedybg.exe attach-to-process-by-id process-id
-//remedybg.exe continue-execution
-//remedybg.exe add-breakpoint-at-file filename line-number
-//remedybg.exe remove-breakpoint-at-file filename line-number
-//remedybg.exe add-breakpoint-at-function function-name [condition expression]
-//remedybg.exe remove-breakpoint-at-function function-name/
-
 DARKJBlow = 0xFF041818;
 DARK0	= 0xff111111;
 DARK1	= 0xff222222;
@@ -53,7 +39,7 @@ defcolor_back = DARK1;
 defcolor_bar = TRANSPARENT_LIGHT;
 defcolor_base = GRAY; // Buffer bar(top or bottom) text
 defcolor_margin = DARK1;
-//defcolor_margin_hover = 0xFF333333;
+defcolor_margin_hover = 0xFF333333;
 defcolor_margin_active = DARK2;
 
 // lister

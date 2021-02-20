@@ -44,7 +44,7 @@ CUSTOM_DOC("Queries the user for a needle and string. Replaces all occurences of
     }
     global_history_edit_group_end(app);
   }
-  
+
 }
 
 CUSTOM_COMMAND_SIG(replace_in_all_buffers_fixed_identifier)
@@ -75,6 +75,6 @@ CUSTOM_DOC("Queries the user for a needle and string. Replaces all occurences of
       }
     }
   }
-  
+
   global_history_edit_group_end(app);
 }

@@ -1,3 +1,10 @@
+// TODO:
+// Replace_in_range_identifier
+//remedybg.exe open-session session-filename
+//remedybg.exe close-file filename
+//remedybg.exe add-breakpoint-at-function function-name [condition expression]
+//remedybg.exe remove-breakpoint-at-function function-name/
+// Macro system! Bind macro to number and save to file;
 
 keys_global = {
     { "interactive_switch_buffer",     "P", "Control" },
@@ -40,6 +47,12 @@ keys_global = {
     { "project_fkey_command", "F8" },
     { "project_fkey_command", "F9" },
     { "project_fkey_command", "F10" },
+    { "debugger_breakpoint_at_cursor", "F9", "Control" },
+    { "debugger_remove_breakpoint_at_cursor", "F9", "Shift" },
+    { "debugger_start_debug", "F5", "Control" },
+    { "debugger_stop_debug", "F5", "Shift" },
+    { "debugger_continue", "F6", "Control" },
+    { "debugger_open_file_at_cursor", "F12", "Control" },
     { "split_fullscreen_mode", "F11" },
     { "explorer_here", "F12" },
     { "load_theme_current_buffer", "T", "Control", "Shift", "Alt" },
