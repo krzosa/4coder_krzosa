@@ -1,4 +1,4 @@
-// TODO:
+/// TODO:
 // Replace_in_range_identifier
 //remedybg.exe open-session session-filename
 //remedybg.exe close-file filename
@@ -13,8 +13,6 @@ keys_global = {
     { "interactive_kill_buffer",       "W", "Control", "Shift" },
     { "interactive_new",               "N", "Control" },
     { "interactive_open_or_new",       "O", "Control" },
-    //{ "keyboard_macro_start_recording", "R", "Alt" },
-    //{ "keyboard_macro_finish_recording", "R", "Alt" },
     { "keyboard_macro_replay",           "R", "Control" },
     { "keyboard_macro_switch",           "R", "Alt" },
     { "change_active_panel",           "1", "Control" },
@@ -28,7 +26,6 @@ keys_global = {
     { "goto_next_jump",                "N", "Alt" },
     { "goto_prev_jump",                "N", "Alt", "Shift" },
     { "goto_first_jump",               "M", "Alt", "Shift" },
-    //{ "build_in_build_panel",          "M", "Alt" },
     //{ "toggle_filebar",                "B", "Alt" },
     //{ "execute_any_cli",               "Z", "Alt" },
     //{ "execute_previous_cli",          "Z", "Alt", "Shift" },
@@ -37,25 +34,25 @@ keys_global = {
     { "list_all_functions_current_buffer_lister", "4", "Control" },
     { "list_all_functions_all_buffers_lister", "4", "Control", "Shift" },
     { "exit_4coder",          "F4", "Alt" },
-    { "project_fkey_command", "F1" },
+//    { "project_fkey_command", "F1" },
+    { "build_in_build_panel",          "F1" },
     { "project_fkey_command", "F2" },
     { "project_fkey_command", "F3" },
     { "project_fkey_command", "F4" },
     { "project_fkey_command", "F5" },
+    { "debugger_start_debug", "F5", "Control" },
+    { "debugger_stop_debug", "F5", "Shift" },
     { "project_fkey_command", "F6" },
+    { "debugger_continue", "F6", "Control" },
     { "project_fkey_command", "F7" },
     { "project_fkey_command", "F8" },
     { "project_fkey_command", "F9" },
-    { "project_fkey_command", "F10" },
-    { "project_fkey_command", "F11" },
-    { "project_fkey_command", "F12" },
-    { "debugger_start_debug", "F5", "Control" },
-    { "debugger_stop_debug", "F5", "Shift" },
-    { "debugger_continue", "F6", "Control" },
     { "debugger_breakpoint_at_cursor", "F9", "Control" },
     { "debugger_remove_breakpoint_at_cursor", "F9", "Shift" },
+    { "project_fkey_command", "F10" },
+    { "project_fkey_command", "F11" },
     { "split_fullscreen_mode", "F11", "Control" },
-    { "explorer_here", "F12", "Shift" },
+    { "project_fkey_command", "F12" },
     { "debugger_open_file_at_cursor", "F12", "Control" },
 
 

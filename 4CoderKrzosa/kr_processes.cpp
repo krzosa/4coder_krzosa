@@ -24,75 +24,135 @@ FileInfoForCommandGet(Application_Links *app, Arena *scratch)
   return result;
 }
 
+internal bool
+string_starts_with(String_Const_u8 a, String_Const_u8 starts_with) {
+  if(a.size < starts_with.size) return false;
+  for(u64 i = 0; i < starts_with.size; i++) {
+    if(a.str[i] != starts_with.str[i]) return false;
+  }
+  return true;
+}
+
+internal void
+exec_commandf(Application_Links *app, String_Const_u8 cmd) {
+  u8 buff[2048];
+  String_u8 str = {buff, 0, 2048};
+  Scratch_Block scratch(app);
+  FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
+  for(u64 i = 0; i < cmd.size; i++) {
+    String_Const_u8 matcher = {cmd.str+i, cmd.size-i};
+    if(string_starts_with(matcher, string_u8_litexpr("{file}"))) {
+      string_append(&str, info.curr_file);
+      i+=5;
+    } 
+    else if(string_starts_with(matcher, string_u8_litexpr("{line}"))) {
+      String_Const_u8 number = push_stringf(scratch, "%d", info.line_number);
+      string_append(&str, number);
+      i+=5;
+    }
+    else {
+      string_append_character(&str, cmd.str[i]);
+    }
+  }
+  
+  //String_Const_u8 cmd = push_stringf(scratch, "clang -W -Wall -g %.*s", string_expand(info.curr_file));
+  print_message(app, str.string);
+  if(cmd.size)
+  {
+    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, str.string, 0);
+  }
+}
+
+CUSTOM_UI_COMMAND_SIG(open_debugger)
+CUSTOM_DOC("Interactively opens a debugger.")
+{
+  for (;;){
+    Scratch_Block scratch(app);
+    View_ID view = get_this_ctx_view(app, Access_Always);
+    File_Name_Result result = get_file_name_from_user(app, scratch, "Open:", view);
+    if (result.canceled) break;
+    
+    String_Const_u8 file_name = result.file_name_activated;
+    if (file_name.size == 0) break;
+    
+    String_Const_u8 path = result.path_in_text_field;
+    String_Const_u8 full_file_name =
+      push_u8_stringf(scratch, "%.*s/%.*s",
+                      string_expand(path), string_expand(file_name));
+    
+    if (result.is_folder){
+      set_hot_directory(app, full_file_name);
+      continue;
+    }
+    
+    if (character_is_slash(file_name.str[file_name.size - 1])){
+      File_Attributes attribs = system_quick_file_attributes(scratch, full_file_name);
+      if (HasFlag(attribs.flags, FileAttribute_IsDirectory)){
+        set_hot_directory(app, full_file_name);
+        continue;
+      }
+      if (query_create_folder(app, file_name)){
+        set_hot_directory(app, full_file_name);
+        continue;
+      }
+      break;
+    }
+    
+    
+    String_Const_u8 cmd = push_stringf(scratch, "rbg.exe %.*s", string_expand(full_file_name));
+    print_message(app, cmd);
+    Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
+    Buffer_Identifier buffer_identi = buffer_identifier(buffer);
+    if(cmd.size)
+    {
+      String_Const_u8 hot_dir = push_hot_directory(app, scratch);
+      exec_system_command(app, global_compilation_view, buffer_identi, hot_dir, cmd, 0);
+    }
+    break;
+  }
+}
+
+CUSTOM_COMMAND_SIG(compile_current_file)
+CUSTOM_DOC("Compile current file with clang")
+{
+  exec_commandf(app, string_u8_litexpr("clang -W -Wall -g {file}"));
+}
+
 CUSTOM_COMMAND_SIG(debugger_start_debug)
 CUSTOM_DOC("Open the app in remedybg")
 {
-  Scratch_Block scratch(app);
-  FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
-  String_Const_u8 cmd = push_stringf(scratch, "rbg.exe start-debugging");
-  if(cmd.size)
-    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, cmd, 0);
+  exec_commandf(app, string_u8_litexpr("rbg.exe start-debugging"));
 }
 
 CUSTOM_COMMAND_SIG(debugger_stop_debug)
 CUSTOM_DOC("Open the app in remedybg")
 {
-  Scratch_Block scratch(app);
-  FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
-  String_Const_u8 cmd = push_stringf(scratch, "rbg.exe stop-debugging");
-  if(cmd.size)
-    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, cmd, 0);
+  exec_commandf(app, string_u8_litexpr("rbg.exe stop-debugging"));
 }
 
 CUSTOM_COMMAND_SIG(debugger_continue)
 CUSTOM_DOC("Continue execution")
 {
-  Scratch_Block scratch(app);
-  FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
-  String_Const_u8 cmd = push_stringf(scratch, "rbg.exe continue-execution");
-  if(cmd.size)
-    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, cmd, 0);
+  exec_commandf(app, string_u8_litexpr("rbg.exe continue-execution"));
 }
 
 CUSTOM_COMMAND_SIG(debugger_open_file_at_cursor)
 CUSTOM_DOC("Open current file in debugger")
 {
-  Scratch_Block scratch(app);
-  FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
-  String_Const_u8 cmd = push_stringf(scratch, "rbg.exe open-file %.*s %d",
-                                     string_expand(info.curr_file), info.line_number);
-  if(cmd.size)
-  {
-    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, cmd, 0);
-  }
+  exec_commandf(app, string_u8_litexpr("rbg.exe open-file {file} {line}"));
 }
 
 CUSTOM_COMMAND_SIG(debugger_breakpoint_at_cursor)
 CUSTOM_DOC("Set remedybg breakpoint at cursor")
 {
-  Scratch_Block scratch(app);
-  FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
-  String_Const_u8 cmd = push_stringf(scratch, "rbg.exe add-breakpoint-at-file %.*s %d",
-                                     string_expand(info.curr_file), info.line_number);
-  if(cmd.size)
-  {
-    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, cmd, 0);
-  }
+  exec_commandf(app, string_u8_litexpr("rbg.exe add-breakpoint-at-file {file} {line}"));
 }
 
 CUSTOM_COMMAND_SIG(debugger_remove_breakpoint_at_cursor)
 CUSTOM_DOC("Remove remedybg breakpoint at cursor")
 {
-  Scratch_Block scratch(app);
-  FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
-  String_Const_u8 cmd = push_stringf(scratch, "rbg.exe remove-breakpoint-at-file %.*s %d",
-                                     string_expand(info.curr_file), info.line_number);
-  if(cmd.size)
-  {
-    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, cmd, 0);
-  }
+  exec_commandf(app, string_u8_litexpr("rbg.exe remove-breakpoint-at-file {file} {line}"));
 }
-
 
 function void open_file_in_4coder_dir(Application_Links *app, String_Const_u8 file)
 {
@@ -120,10 +180,5 @@ CUSTOM_DOC("Open theme file")
 CUSTOM_COMMAND_SIG(explorer_here)
 CUSTOM_DOC("runs explorer in current dir")
 {
-  Scratch_Block scratch(app);
-  Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
-  Buffer_Identifier id = buffer_identifier(buffer);
-  String_Const_u8 hot = push_hot_directory(app, scratch);
-  String_Const_u8 cmd = SCu8("explorer.exe .");
-  exec_system_command(app, global_compilation_view, id, hot, cmd, 0);
+  exec_commandf(app, string_u8_litexpr("explorer.exe ."));
 }

@@ -40,7 +40,7 @@ mark_thickness = 2;
 lister_roundness = 20;
 
 // Code Wrapping
-treat_as_code = ".cpp.c.hpp.h.cc.cs.java.rs.glsl.m.mm";
+treat_as_code = ".cpp.c.hpp.h.cc.cs.java.rs.glsl.m.mm.fx.js";
 enable_virtual_whitespace = true;
 virtual_whitespace_regular_indent = 2;
 enable_code_wrapping = true;
@@ -66,7 +66,7 @@ default_theme_name = "kr";
 // Font
 default_font_name = "liberation-mono.ttf";
 default_font_size = 12;
-default_font_hinting = false;
+default_font_hinting = true;
 
 // aa modes:
 //  8bit - mono-chrome 0-255 opacity channel per pixel

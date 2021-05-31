@@ -1,11 +1,13 @@
 global f32 global_highlight_transparency = 0.2f;
 static f32 MinimumF32(f32 a, f32 b){return a < b ? a : b;}
 static f32 MaximumF32(f32 a, f32 b){return a > b ? a : b;}
+
 enum F4_RangeHighlightKind
 {
   F4_RangeHighlightKind_Whole,
   F4_RangeHighlightKind_Underline,
 };
+
 function void
 F4_RenderRangeHighlight(Application_Links *app, View_ID view_id, Text_Layout_ID text_layout_id,
                         Range_i64 range, F4_RangeHighlightKind kind)

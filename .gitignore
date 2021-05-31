@@ -3,6 +3,7 @@
 *.txt
 *.pdb
 *.ttf
+*.ilk
 
 mac-bindings.4coder
 
