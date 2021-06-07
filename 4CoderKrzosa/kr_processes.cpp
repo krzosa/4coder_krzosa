@@ -57,9 +57,10 @@ exec_commandf(Application_Links *app, String_Const_u8 cmd) {
   
   //String_Const_u8 cmd = push_stringf(scratch, "clang -W -Wall -g %.*s", string_expand(info.curr_file));
   print_message(app, str.string);
+  print_message(app, string_u8_litexpr("\n"));
   if(cmd.size)
   {
-    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, str.string, 0);
+    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, str.string, CLI_OverlapWithConflict | CLI_AlwaysBindToView);
   }
 }
 
@@ -101,6 +102,7 @@ CUSTOM_DOC("Interactively opens a debugger.")
     
     String_Const_u8 cmd = push_stringf(scratch, "rbg.exe %.*s", string_expand(full_file_name));
     print_message(app, cmd);
+    print_message(app, string_u8_litexpr("\n"));
     Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
     Buffer_Identifier buffer_identi = buffer_identifier(buffer);
     if(cmd.size)
@@ -115,7 +117,9 @@ CUSTOM_DOC("Interactively opens a debugger.")
 CUSTOM_COMMAND_SIG(compile_current_file)
 CUSTOM_DOC("Compile current file with clang")
 {
-  exec_commandf(app, string_u8_litexpr("clang -W -Wall -g {file}"));
+  Scratch_Block scratch(app);
+  String_Const_u8 command = def_get_config_string(scratch, vars_save_string_lit("compile_command"));
+  exec_commandf(app, command);
 }
 
 CUSTOM_COMMAND_SIG(debugger_start_debug)

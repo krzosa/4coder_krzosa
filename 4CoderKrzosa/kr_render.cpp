@@ -76,8 +76,7 @@ HighlightSelectionMatches(Application_Links *app, View_ID view,
   if(line_min == line_max)
   {
     
-    String_Const_u8 selected_string = push_buffer_range(app, scratch, 
-                                                        buffer, selection);
+    String_Const_u8 selected_string = push_buffer_range(app, scratch, buffer, selection);
     
     local_persist Character_Predicate *pred = &character_predicate_alpha_numeric_underscore_utf8;
     

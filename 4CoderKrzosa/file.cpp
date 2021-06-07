@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+Hello memes
+
 int main() {
-  printf("Hello");
+  printf("Hello\n");
 }
