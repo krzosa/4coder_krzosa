@@ -60,7 +60,7 @@ exec_commandf(Application_Links *app, String_Const_u8 cmd) {
   print_message(app, string_u8_litexpr("\n"));
   if(cmd.size)
   {
-    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, str.string, CLI_OverlapWithConflict | CLI_AlwaysBindToView);
+    exec_system_command(app, global_compilation_view, info.buffer_id, info.hot_dir, str.string, CLI_OverlapWithConflict|CLI_CursorAtEnd|CLI_SendEndSignal);
   }
 }
 
@@ -158,6 +158,14 @@ CUSTOM_DOC("Remove remedybg breakpoint at cursor")
   exec_commandf(app, string_u8_litexpr("rbg.exe remove-breakpoint-at-file {file} {line}"));
 }
 
+CUSTOM_COMMAND_SIG(run_build_cpp)
+CUSTOM_DOC("Compile project using build.cpp")
+{
+  Scratch_Block scratch(app);
+  String_Const_u8 command = def_get_config_string(scratch, vars_save_string_lit("build_command"));
+  exec_commandf(app, command);
+}
+
 function void open_file_in_4coder_dir(Application_Links *app, String_Const_u8 file)
 {
   View_ID active_view = get_active_view(app, Access_Always);
@@ -185,4 +193,17 @@ CUSTOM_COMMAND_SIG(explorer_here)
 CUSTOM_DOC("runs explorer in current dir")
 {
   exec_commandf(app, string_u8_litexpr("explorer.exe ."));
+}
+
+CUSTOM_COMMAND_SIG(open_4coder_source)
+CUSTOM_DOC("Opens 4coder in 4coder source directory")
+{
+  Scratch_Block scratch(app);
+  String_Const_u8 prev_dir = push_hot_directory(app, scratch);
+  String_Const_u8 binary = system_get_path(scratch, SystemPath_Binary);
+  set_hot_directory(app, binary);
+  exec_commandf(app, string_u8_litexpr("4ed.exe"));
+  //String_Const_u8 cmd = push_stringf(scratch, "start cmd.exe %s", binary.size, binary.str);
+  //exec_commandf(app, cmd);
+  set_hot_directory(app, prev_dir);
 }

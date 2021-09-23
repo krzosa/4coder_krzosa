@@ -1,4 +1,3 @@
-DARKJBlow = 0xFF041818;
 DARK0	= 0xff111111;
 DARK1	= 0xff222222;
 DARK2	= 0xff504945;
@@ -89,9 +88,6 @@ defcolor_line_numbers_text = defcolor_base;
 
 defcolor_type = PRIMARY;
 defcolor_function = SECONDARY;
-defcolor_macro = TERTIARY;
+defcolor_macro = ORANGE;
 defcolor_selection_highlight = TERTIARY;
 
-
-vertical_scope_annotation_text = DARK2;
-vertical_scope_annotation_highlight = DARK4;

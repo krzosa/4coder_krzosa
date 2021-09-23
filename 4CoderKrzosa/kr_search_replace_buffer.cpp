@@ -57,6 +57,9 @@ CUSTOM_DOC("Replace all lines in search buffer")
   Scratch_Block scratch(app);
   View_ID view = get_active_view(app, Access_Always);
   Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
+  String_Const_u8 name = push_buffer_base_name(app, scratch, buffer);
+  print_message(app, name);
+  if(!string_match(name, string_u8_litexpr("*search_replace*"))) return;
   String_Const_u8 string = push_whole_buffer(app, scratch, buffer);
   
   
