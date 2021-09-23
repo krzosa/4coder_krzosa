@@ -166,6 +166,7 @@ CUSTOM_DOC("Compile project using build.cpp")
 {
   Scratch_Block scratch(app);
   S8 command = def_get_config_string(scratch, vars_save_string_lit("build_command"));
+  save_all_dirty_buffers(app);
   exec_commandf(app, command);
 }
 
@@ -183,7 +184,7 @@ function void open_file_in_4coder_dir(Application_Links *app, S8 file)
 CUSTOM_COMMAND_SIG(open_bindings)
 CUSTOM_DOC("Open hotkey file")
 {
-  open_file_in_4coder_dir(app, SCu8("bindings.4coder"));
+  open_file_in_4coder_dir(app, SCu8("4coder_krzosa/bindings.4coder"));
 }
 
 CUSTOM_COMMAND_SIG(open_theme)
