@@ -24,7 +24,7 @@ CUSTOM_ID( colors, defcolor_compilation_buffer );
 
 #include "kr_text_editing.cpp"
 #include "kr_render.cpp"
-#include "kr_hooks.cpp"
+#include "kr_search_replace_buffer.cpp"
 #include "kr_buffers.cpp"
 #include "kr_painter_mode.cpp"
 #include "kr_fullscreen.cpp"
@@ -49,7 +49,13 @@ CUSTOM_DOC("Default command for responding to a startup event")
     b32 auto_load = def_get_config_b32(vars_save_string_lit("automatically_load_project"));
     if (auto_load){
       load_project(app);
+      Variable_Handle prj_var = vars_read_key(vars_get_root(), vars_save_string_lit("prj_config"));
+      if(vars_is_nil(prj_var)){
+        open_all_code_recursive(app);
+      }
     }
+    split_fullscreen_mode(app);
+    
   }
   
 #if 0 // Audio memes
@@ -124,7 +130,6 @@ custom_layer_init(Application_Links *app){
 #endif
 	//setup_essential_mapping(&framework_mapping, global_map_id, file_map_id, code_map_id);
   SetupEssentialMapping(&framework_mapping, global_map_id, file_map_id, code_map_id);
-  
 }
 
 #endif //FCODER_DEFAULT_BINDINGS

@@ -86,3 +86,5 @@ default_compiler_sh = "g++";
 default_flags_sh  = "-g";
 
 margin_size = 0;
+compile_command="clang -g {file}";
+build_command="clang.exe -g -Wall -Wextra -DBUILD_DEBUG=1 -DBUILD_SLOW=1 -o build.exe build.cpp && build.exe";

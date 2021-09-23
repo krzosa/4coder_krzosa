@@ -1,6 +1,6 @@
 b32 global_compilation_view_expanded = 0;
 View_ID global_compilation_view = 0;
-f32 global_compilation_small_buffer_size = 4.f;
+f32 global_compilation_small_buffer_size = 8.f;
 
 CUSTOM_COMMAND_SIG(expand_compilation_window) 
 CUSTOM_DOC("Expand the compilation window.") 
