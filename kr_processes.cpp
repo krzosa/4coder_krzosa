@@ -1,10 +1,13 @@
+#define L(...) string_u8_litexpr(__VA_ARGS__)
+#define E(...) string_expand(__VA_ARGS__)
+typedef String_Const_u8 S8;
 struct FileInfoForCommand
 {
   View_ID view;
   Buffer_ID buffer;
   Buffer_Identifier buffer_id;
-  String_Const_u8 curr_file;
-  String_Const_u8 hot_dir;
+  S8 curr_file;
+  S8 hot_dir;
   i64 line_number;
 };
 
@@ -25,7 +28,7 @@ FileInfoForCommandGet(Application_Links *app, Arena *scratch)
 }
 
 internal bool
-string_starts_with(String_Const_u8 a, String_Const_u8 starts_with) {
+string_starts_with(S8 a, S8 starts_with) {
   if(a.size < starts_with.size) return false;
   for(u64 i = 0; i < starts_with.size; i++) {
     if(a.str[i] != starts_with.str[i]) return false;
@@ -34,19 +37,19 @@ string_starts_with(String_Const_u8 a, String_Const_u8 starts_with) {
 }
 
 internal void
-exec_commandf(Application_Links *app, String_Const_u8 cmd) {
+exec_commandf(Application_Links *app, S8 cmd) {
   u8 buff[2048];
   String_u8 str = {buff, 0, 2048};
   Scratch_Block scratch(app);
   FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
   for(u64 i = 0; i < cmd.size; i++) {
-    String_Const_u8 matcher = {cmd.str+i, cmd.size-i};
+    S8 matcher = {cmd.str+i, cmd.size-i};
     if(string_starts_with(matcher, string_u8_litexpr("{file}"))) {
       string_append(&str, info.curr_file);
       i+=5;
     } 
     else if(string_starts_with(matcher, string_u8_litexpr("{line}"))) {
-      String_Const_u8 number = push_stringf(scratch, "%d", info.line_number);
+      S8 number = push_stringf(scratch, "%d", info.line_number);
       string_append(&str, number);
       i+=5;
     }
@@ -55,7 +58,7 @@ exec_commandf(Application_Links *app, String_Const_u8 cmd) {
     }
   }
   
-  //String_Const_u8 cmd = push_stringf(scratch, "clang -W -Wall -g %.*s", string_expand(info.curr_file));
+  //S8 cmd = push_stringf(scratch, "clang -W -Wall -g %.*s", string_expand(info.curr_file));
   print_message(app, str.string);
   print_message(app, string_u8_litexpr("\n"));
   if(cmd.size)
@@ -73,11 +76,11 @@ CUSTOM_DOC("Interactively opens a debugger.")
     File_Name_Result result = get_file_name_from_user(app, scratch, "Open:", view);
     if (result.canceled) break;
     
-    String_Const_u8 file_name = result.file_name_activated;
+    S8 file_name = result.file_name_activated;
     if (file_name.size == 0) break;
     
-    String_Const_u8 path = result.path_in_text_field;
-    String_Const_u8 full_file_name =
+    S8 path = result.path_in_text_field;
+    S8 full_file_name =
       push_u8_stringf(scratch, "%.*s/%.*s",
                       string_expand(path), string_expand(file_name));
     
@@ -100,14 +103,14 @@ CUSTOM_DOC("Interactively opens a debugger.")
     }
     
     
-    String_Const_u8 cmd = push_stringf(scratch, "rbg.exe %.*s", string_expand(full_file_name));
+    S8 cmd = push_stringf(scratch, "rbg.exe %.*s", string_expand(full_file_name));
     print_message(app, cmd);
     print_message(app, string_u8_litexpr("\n"));
     Buffer_ID buffer = view_get_buffer(app, global_compilation_view, Access_Always);
     Buffer_Identifier buffer_identi = buffer_identifier(buffer);
     if(cmd.size)
     {
-      String_Const_u8 hot_dir = push_hot_directory(app, scratch);
+      S8 hot_dir = push_hot_directory(app, scratch);
       exec_system_command(app, global_compilation_view, buffer_identi, hot_dir, cmd, 0);
     }
     break;
@@ -118,7 +121,7 @@ CUSTOM_COMMAND_SIG(compile_current_file)
 CUSTOM_DOC("Compile current file with clang")
 {
   Scratch_Block scratch(app);
-  String_Const_u8 command = def_get_config_string(scratch, vars_save_string_lit("compile_command"));
+  S8 command = def_get_config_string(scratch, vars_save_string_lit("compile_command"));
   exec_commandf(app, command);
 }
 
@@ -162,15 +165,16 @@ CUSTOM_COMMAND_SIG(run_build_cpp)
 CUSTOM_DOC("Compile project using build.cpp")
 {
   Scratch_Block scratch(app);
-  String_Const_u8 command = def_get_config_string(scratch, vars_save_string_lit("build_command"));
+  S8 command = def_get_config_string(scratch, vars_save_string_lit("build_command"));
+  save_all_dirty_buffers(app);
   exec_commandf(app, command);
 }
 
-function void open_file_in_4coder_dir(Application_Links *app, String_Const_u8 file)
+function void open_file_in_4coder_dir(Application_Links *app, S8 file)
 {
   View_ID active_view = get_active_view(app, Access_Always);
   Scratch_Block scratch(app);
-  String_Const_u8 binary = system_get_path(scratch, SystemPath_Binary);
+  S8 binary = system_get_path(scratch, SystemPath_Binary);
   String_u8 path = string_u8_push(scratch, 255);
   string_append(&path, binary);
   string_append(&path, file);
@@ -180,7 +184,7 @@ function void open_file_in_4coder_dir(Application_Links *app, String_Const_u8 fi
 CUSTOM_COMMAND_SIG(open_bindings)
 CUSTOM_DOC("Open hotkey file")
 {
-  open_file_in_4coder_dir(app, SCu8("bindings.4coder"));
+  open_file_in_4coder_dir(app, SCu8("4coder_krzosa/bindings.4coder"));
 }
 
 CUSTOM_COMMAND_SIG(open_theme)
@@ -195,15 +199,55 @@ CUSTOM_DOC("runs explorer in current dir")
   exec_commandf(app, string_u8_litexpr("explorer.exe ."));
 }
 
-CUSTOM_COMMAND_SIG(open_4coder_source)
-CUSTOM_DOC("Opens 4coder in 4coder source directory")
+CUSTOM_COMMAND_SIG(projects_list)
+CUSTOM_DOC("Opens a project list")
 {
   Scratch_Block scratch(app);
-  String_Const_u8 prev_dir = push_hot_directory(app, scratch);
-  String_Const_u8 binary = system_get_path(scratch, SystemPath_Binary);
-  set_hot_directory(app, binary);
-  exec_commandf(app, string_u8_litexpr("4ed.exe"));
-  //String_Const_u8 cmd = push_stringf(scratch, "start cmd.exe %s", binary.size, binary.str);
-  //exec_commandf(app, cmd);
-  set_hot_directory(app, prev_dir);
+  S8 binary = system_get_path(scratch, SystemPath_Binary);
+  S8 path = push_stringf(scratch, "%.*sprojects.txt\0", binary.size, binary.str);
+  FILE *file = fopen((char *)path.str, "rb");
+  if(file) {
+    S8 data = dump_file_handle(scratch, file);
+    List_String_Const_u8 list = string_split(scratch, data, (u8 *)"\n", 1);
+    Lister_Block lister(app, scratch);
+    lister_set_query(lister, L("project path: "));
+    lister_set_default_handlers(lister);
+    
+    for(Node_String_Const_u8 *node = list.first; node; node=node->next) {
+      S8 str = node->string;
+      lister_add_item(lister, str, str, (void *)&node->string, 0);
+    }
+    Lister_Result result = run_lister(app, lister);
+    if(!result.canceled) {
+      S8 *ptr = (String8 *)result.user_data;
+      close_all_code(app);
+      set_hot_directory(app, *ptr);
+      open_all_code_recursive(app);
+    }
+  }
+  else {
+    log_string(app, L("Failed to fetch project file list for reading"));
+  }
+}
+
+CUSTOM_COMMAND_SIG(add_folder_to_project_list)
+CUSTOM_DOC("Opens a project list")
+{
+  Scratch_Block scratch(app);
+  S8 binary = system_get_path(scratch, SystemPath_Binary);
+  S8 path = push_stringf(scratch, "%.*sprojects.txt\0", binary.size, binary.str);
+  FILE *file = fopen((char *)path.str, "rb");
+  S8 data = L("");
+  if(file) {
+    data = dump_file_handle(scratch, file);
+    fclose(file);
+  }
+  
+  file = fopen((char *)path.str, "w");
+  if(file) {
+    S8 hot = push_hot_directory(app, scratch);
+    S8 combined_power_of_will = push_stringf(scratch, "%.*s\n%.*s", E(data), E(hot));
+    fwrite(combined_power_of_will.str, 1, combined_power_of_will.size, file);
+    fclose(file);
+  }
 }

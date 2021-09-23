@@ -107,7 +107,6 @@ SetupEssentialMapping(Mapping *mapping, i64 global_id, i64 file_id, i64 code_id)
   BindTextInput(write_text_and_auto_indent);
 }
 
-
 void
 custom_layer_init(Application_Links *app){
   Thread_Context *tctx = get_thread_context(app);

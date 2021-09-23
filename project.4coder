@@ -33,9 +33,9 @@ build_super_x64_mac  = "custom/bin/buildsuper_x64-mac.sh";
 command_list = {
  { .name = "build super x64",
    .out = "*compilation*", .footer_panel = true, .save_dirty_files = true,
-   .cmd = { {build_super_x64_win32, .os ="win"  },
-            {build_super_x64_linux , .os ="linux"},
-            {build_super_x64_mac , .os ="mac"  }, }, },
+   .cmd = { {"build", .os ="win"  },
+            {"build" , .os ="linux"},
+            {"build" , .os ="mac"  }, }, },
  
  { .name = "build super x86",
    .out = "*compilation*", .footer_panel = true, .save_dirty_files = true,

@@ -91,7 +91,7 @@ function void SnakeCaseToPascalCase(String_Const_u8 *string)
 }
 
 CUSTOM_COMMAND_SIG(snake_case_to_pascal_case)
-CUSTOM_DOC("Open theme file")
+CUSTOM_DOC("Snake case to pascal case")
 {
   View_ID view = get_active_view(app, Access_Always);
   Buffer_ID buffer = view_get_buffer(app, view, Access_Always);
