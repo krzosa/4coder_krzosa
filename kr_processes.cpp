@@ -12,7 +12,7 @@ struct FileInfoForCommand
 };
 
 function FileInfoForCommand
-FileInfoForCommandGet(Application_Links *app, Arena *scratch)
+get_file_info(Application_Links *app, Arena *scratch)
 {
   FileInfoForCommand result;
   result.view = get_active_view(app, Access_Always);
@@ -41,7 +41,7 @@ exec_commandf(Application_Links *app, S8 cmd) {
   u8 buff[2048];
   String_u8 str = {buff, 0, 2048};
   Scratch_Block scratch(app);
-  FileInfoForCommand info = FileInfoForCommandGet(app, scratch);
+  FileInfoForCommand info = get_file_info(app, scratch);
   for(u64 i = 0; i < cmd.size; i++) {
     S8 matcher = {cmd.str+i, cmd.size-i};
     if(string_starts_with(matcher, string_u8_litexpr("{file}"))) {
@@ -199,13 +199,43 @@ CUSTOM_DOC("runs explorer in current dir")
   exec_commandf(app, string_u8_litexpr("explorer.exe ."));
 }
 
+CUSTOM_COMMAND_SIG(cmd_here)
+CUSTOM_DOC("runs cmd in current dir")
+{
+  exec_commandf(app, string_u8_litexpr("start cmd.exe ."));
+}
+
+function FILE *
+open_file_in_4coder_dir(Arena *scratch, S8 filename, char *op) {
+  S8 binary = system_get_path(scratch, SystemPath_Binary);
+  S8 path = push_stringf(scratch, "%.*s%.*s\0", binary.size, binary.str, filename.size, filename.str);
+  FILE *file = fopen((char *)path.str, op);
+  return file;
+}
+
+CUSTOM_COMMAND_SIG(last_project)
+CUSTOM_DOC("Opens last project")
+{
+  Scratch_Block scratch(app);
+  FILE *file = open_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
+  if(file) {
+    S8 data = dump_file_handle(scratch, file);
+    List_String_Const_u8 list = string_split(scratch, data, (u8 *)"\n", 1);
+    Node_String_Const_u8 *first = list.first;
+    if(first) {
+      close_all_code(app);
+      set_hot_directory(app, first->string);
+      open_all_code_recursive(app);
+    }
+    fclose(file);
+  }
+}
+
 CUSTOM_COMMAND_SIG(projects_list)
 CUSTOM_DOC("Opens a project list")
 {
   Scratch_Block scratch(app);
-  S8 binary = system_get_path(scratch, SystemPath_Binary);
-  S8 path = push_stringf(scratch, "%.*sprojects.txt\0", binary.size, binary.str);
-  FILE *file = fopen((char *)path.str, "rb");
+  FILE *file = open_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
   if(file) {
     S8 data = dump_file_handle(scratch, file);
     List_String_Const_u8 list = string_split(scratch, data, (u8 *)"\n", 1);
@@ -215,15 +245,29 @@ CUSTOM_DOC("Opens a project list")
     
     for(Node_String_Const_u8 *node = list.first; node; node=node->next) {
       S8 str = node->string;
-      lister_add_item(lister, str, str, (void *)&node->string, 0);
+      lister_add_item(lister, str, str, (void *)node, 0);
     }
     Lister_Result result = run_lister(app, lister);
     if(!result.canceled) {
-      S8 *ptr = (String8 *)result.user_data;
+      Node_String_Const_u8* ptr = (Node_String_Const_u8 *)result.user_data;
+      FILE *write = open_file_in_4coder_dir(scratch, L("projects.txt"), "w");
+      if(write) { // @Note: Reorder nodes and write so that opened node is first
+        List_String_Const_u8 save_list = {};
+        string_list_push(scratch, &save_list, ptr->string);
+        for(Node_String_Const_u8 *node = list.first; node; node=node->next) {
+          if(node != ptr) {
+            string_list_push(scratch, &save_list, node->string);
+          }
+        }
+        S8 new_order = string_list_flatten(scratch, save_list, 0, L("\n"), 0, StringFill_NoTerminate);
+        fwrite(new_order.str, 1, new_order.size, write);
+        fclose(write);
+      }
       close_all_code(app);
-      set_hot_directory(app, *ptr);
+      set_hot_directory(app, ptr->string);
       open_all_code_recursive(app);
     }
+    fclose(file);
   }
   else {
     log_string(app, L("Failed to fetch project file list for reading"));
@@ -234,20 +278,42 @@ CUSTOM_COMMAND_SIG(add_folder_to_project_list)
 CUSTOM_DOC("Opens a project list")
 {
   Scratch_Block scratch(app);
-  S8 binary = system_get_path(scratch, SystemPath_Binary);
-  S8 path = push_stringf(scratch, "%.*sprojects.txt\0", binary.size, binary.str);
-  FILE *file = fopen((char *)path.str, "rb");
+  FILE *file = open_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
   S8 data = L("");
   if(file) {
     data = dump_file_handle(scratch, file);
     fclose(file);
   }
   
-  file = fopen((char *)path.str, "w");
+  file = open_file_in_4coder_dir(scratch, L("projects.txt"), "w");
   if(file) {
     S8 hot = push_hot_directory(app, scratch);
     S8 combined_power_of_will = push_stringf(scratch, "%.*s\n%.*s", E(data), E(hot));
     fwrite(combined_power_of_will.str, 1, combined_power_of_will.size, file);
     fclose(file);
+  }
+}
+
+CUSTOM_COMMAND_SIG(restart_4coder)
+CUSTOM_DOC("Kill current instance and make a new 4coder")
+{
+  exec_commandf(app, string_u8_litexpr("4ed.bat"));
+  exit_4coder(app);
+}
+
+
+CUSTOM_UI_COMMAND_SIG(_snippet_lister)
+CUSTOM_DOC("Opens a snippet lister for inserting whole pre-written snippets of text.")
+{
+  View_ID view = get_this_ctx_view(app, Access_ReadWrite);
+  if (view != 0){
+    
+    Snippet *snippet = get_snippet_from_user(app, default_snippets,
+                                             ArrayCount(default_snippets),
+                                             "Snippet:");
+    
+    Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
+    i64 pos = view_get_cursor_pos(app, view);
+    write_snippet(app, view, buffer, pos, snippet);
   }
 }

@@ -134,4 +134,3 @@ CUSTOM_DOC("Start stop macro")
     global_keyboard_macro_range.first = buffer_get_size(app, buffer);
   }
 }
-
