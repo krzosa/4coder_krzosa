@@ -250,22 +250,24 @@ CUSTOM_DOC("Opens a project list")
     Lister_Result result = run_lister(app, lister);
     if(!result.canceled) {
       Node_String_Const_u8* ptr = (Node_String_Const_u8 *)result.user_data;
-      FILE *write = open_file_in_4coder_dir(scratch, L("projects.txt"), "w");
-      if(write) { // @Note: Reorder nodes and write so that opened node is first
-        List_String_Const_u8 save_list = {};
-        string_list_push(scratch, &save_list, ptr->string);
-        for(Node_String_Const_u8 *node = list.first; node; node=node->next) {
-          if(node != ptr) {
-            string_list_push(scratch, &save_list, node->string);
+      if(ptr && ptr->string.size) {
+        FILE *write = open_file_in_4coder_dir(scratch, L("projects.txt"), "w");
+        if(write) { // @Note: Reorder nodes and write so that opened node is first
+          List_String_Const_u8 save_list = {};
+          string_list_push(scratch, &save_list, ptr->string);
+          for(Node_String_Const_u8 *node = list.first; node; node=node->next) {
+            if(node != ptr) {
+              string_list_push(scratch, &save_list, node->string);
+            }
           }
+          S8 new_order = string_list_flatten(scratch, save_list, 0, L("\n"), 0, StringFill_NoTerminate);
+          fwrite(new_order.str, 1, new_order.size, write);
+          fclose(write);
         }
-        S8 new_order = string_list_flatten(scratch, save_list, 0, L("\n"), 0, StringFill_NoTerminate);
-        fwrite(new_order.str, 1, new_order.size, write);
-        fclose(write);
+        close_all_code(app);
+        set_hot_directory(app, ptr->string);
+        open_all_code_recursive(app);
       }
-      close_all_code(app);
-      set_hot_directory(app, ptr->string);
-      open_all_code_recursive(app);
     }
     fclose(file);
   }
@@ -301,19 +303,97 @@ CUSTOM_DOC("Kill current instance and make a new 4coder")
   exit_4coder(app);
 }
 
+////////////////////////////////
+
+function List_String_Const_u8
+string_split_needle_dont_include(Arena *arena, String_Const_u8 string, String_Const_u8 needle){
+  List_String_Const_u8 list = {};
+  for (;string.size > 0;){
+    u64 pos = string_find_first(string, needle);
+    String_Const_u8 prefix = string_prefix(string, pos);
+    if (prefix.size > 0){
+      string_list_push(arena, &list, prefix);
+    }
+    string = string_skip(string, prefix.size + needle.size);
+  }
+  return(list);
+}
+
+struct Snippet2 { // Long awaited continuation of the Snippet
+  S8 name;
+  S8 text;
+  u64 cursor_offset;
+  u64 mark_offset;
+};
+
+function void
+write_snippet(Application_Links *app, View_ID view, Buffer_ID buffer,
+              i64 pos, Snippet2 *snippet){
+  if (snippet != 0){
+    String_Const_u8 snippet_text = snippet->text;
+    buffer_replace_range(app, buffer, Ii64(pos), snippet_text);
+    i64 new_cursor = pos + snippet->cursor_offset;
+    view_set_cursor_and_preferred_x(app, view, seek_pos(new_cursor));
+    i64 new_mark = pos + snippet->mark_offset;
+    view_set_mark(app, view, seek_pos(new_mark));
+    auto_indent_buffer(app, buffer, Ii64_size(pos, snippet_text.size));
+  }
+}
+
+function Snippet2*
+get_snippet_from_user(Application_Links *app, Snippet2 *snippets, i32 snippet_count,
+                      String_Const_u8 query){
+  Scratch_Block scratch(app);
+  Lister_Block lister(app, scratch);
+  lister_set_query(lister, query);
+  lister_set_default_handlers(lister);
+  
+  Snippet2 *snippet = snippets;
+  for (i32 i = 0; i < snippet_count; i += 1, snippet += 1){
+    lister_add_item(lister, snippet->name, snippet->text, snippet, 0);
+  }
+  Lister_Result l_result = run_lister(app, lister);
+  Snippet2 *result = 0;
+  if (!l_result.canceled){
+    result = (Snippet2*)l_result.user_data;
+  }
+  return(result);
+}
 
 CUSTOM_UI_COMMAND_SIG(_snippet_lister)
 CUSTOM_DOC("Opens a snippet lister for inserting whole pre-written snippets of text.")
 {
   View_ID view = get_this_ctx_view(app, Access_ReadWrite);
   if (view != 0){
+    Scratch_Block scratch(app);
+    Scratch_Block array_alloc(app, scratch);
+    Snippet2 *input_snippets = 0;
+    u32 len = 0;
+    FILE *file = open_file_in_4coder_dir(scratch, L("snippets.txt"), "rb");
+    if(file) {
+      S8 data = dump_file_handle(scratch, file);
+      *push_array(scratch, u8, 1) = 0; // null_terminate
+      List_String_Const_u8 list = string_split_needle_dont_include(scratch, data, L("::"));
+      Snippet2 *snippet = push_array(array_alloc, Snippet2, 1);
+      input_snippets = snippet;
+      len = 0;
+      for(Node_String_Const_u8 *node=list.first; node;) {
+        if(node==0||node->next==0) break;
+        snippet->cursor_offset = (i32)string_find_first(node->string, L("$"), StringMatch_Exact);
+        snippet->mark_offset = (i32)string_find_first(node->string, L("$$"), StringMatch_Exact);
+        snippet->name = string_skip_chop_whitespace(node->string); 
+        snippet->text = string_replace(scratch, node->next->string, L("$"), L(""));
+        push_array(array_alloc, Snippet2, 1);
+        node=node->next->next; len++; snippet++;
+      }
+      fclose(file);
+    }
     
-    Snippet *snippet = get_snippet_from_user(app, default_snippets,
-                                             ArrayCount(default_snippets),
-                                             "Snippet:");
-    
-    Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
-    i64 pos = view_get_cursor_pos(app, view);
-    write_snippet(app, view, buffer, pos, snippet);
+    if(len > 0) {
+      Snippet2 *snippet = get_snippet_from_user(app, input_snippets, len, L("Snippet:"));
+      Buffer_ID buffer = view_get_buffer(app, view, Access_ReadWriteVisible);
+      i64 pos = view_get_cursor_pos(app, view);
+      write_snippet(app, view, buffer, pos, snippet);
+    }
   }
 }
