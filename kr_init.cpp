@@ -1,10 +1,7 @@
-// KRFIX 4coder_lister_base.cpp:298
-// i32 max_count = first_index + lister->visible_count + 4;
-// count = clamp_top(lister->filtered.count, max_count);
-
 // TODO(Krzosa):
 // @replace_in_range needs an identifier variant!
 // @
+#include "patches.cpp"
 
 #if !defined(FCODER_DEFAULT_BINDINGS_CPP)
 #define FCODER_DEFAULT_BINDINGS_CPP

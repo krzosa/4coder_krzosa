@@ -1,5 +1,7 @@
 #define L(...) string_u8_litexpr(__VA_ARGS__)
 #define E(...) string_expand(__VA_ARGS__)
+#define _loop_sll(first,node,next) for(auto *node = (first); node; node=node->next)
+#define loop_sll(first,node) _loop_sll(first,node,next)
 typedef String_Const_u8 S8;
 struct FileInfoForCommand
 {
@@ -10,6 +12,28 @@ struct FileInfoForCommand
   S8 hot_dir;
   i64 line_number;
 };
+
+function bool
+string_starts_with(S8 a, S8 starts_with) {
+  if(a.size < starts_with.size) return false;
+  for(u64 i = 0; i < starts_with.size; i++) {
+    if(a.str[i] != starts_with.str[i]) return false;
+  }
+  return true;
+}
+
+function i64
+string_find_first2(S8 string, S8 seek) {
+  i64 result = -1;
+  for(i64 i = 0; i < (i64)string.size; i++) {
+    Range_i64 range = Ii64(i, clamp_top(i+seek.size, string.size));
+    if(string_match(string_substring(string, range), seek)) {
+      result = i;
+      break;
+    }
+  }
+  return result;
+}
 
 function FileInfoForCommand
 get_file_info(Application_Links *app, Arena *scratch)
@@ -25,15 +49,6 @@ get_file_info(Application_Links *app, Arena *scratch)
   result.line_number = get_line_number_from_pos(app, buffer_curr_file, cursor_pos);
   result.hot_dir = push_hot_directory(app, scratch);
   return result;
-}
-
-internal bool
-string_starts_with(S8 a, S8 starts_with) {
-  if(a.size < starts_with.size) return false;
-  for(u64 i = 0; i < starts_with.size; i++) {
-    if(a.str[i] != starts_with.str[i]) return false;
-  }
-  return true;
 }
 
 internal void
@@ -58,7 +73,6 @@ exec_commandf(Application_Links *app, S8 cmd) {
     }
   }
   
-  //S8 cmd = push_stringf(scratch, "clang -W -Wall -g %.*s", string_expand(info.curr_file));
   print_message(app, str.string);
   print_message(app, string_u8_litexpr("\n"));
   if(cmd.size)
@@ -67,7 +81,7 @@ exec_commandf(Application_Links *app, S8 cmd) {
   }
 }
 
-CUSTOM_UI_COMMAND_SIG(open_debugger)
+CUSTOM_UI_COMMAND_SIG(D1_debugger_open_file)
 CUSTOM_DOC("Interactively opens a debugger.")
 {
   for (;;){
@@ -80,9 +94,7 @@ CUSTOM_DOC("Interactively opens a debugger.")
     if (file_name.size == 0) break;
     
     S8 path = result.path_in_text_field;
-    S8 full_file_name =
-      push_u8_stringf(scratch, "%.*s/%.*s",
-                      string_expand(path), string_expand(file_name));
+    S8 full_file_name = push_u8_stringf(scratch, "%.*s/%.*s", string_expand(path), string_expand(file_name));
     
     if (result.is_folder){
       set_hot_directory(app, full_file_name);
@@ -117,14 +129,6 @@ CUSTOM_DOC("Interactively opens a debugger.")
   }
 }
 
-CUSTOM_COMMAND_SIG(compile_current_file)
-CUSTOM_DOC("Compile current file with clang")
-{
-  Scratch_Block scratch(app);
-  S8 command = def_get_config_string(scratch, vars_save_string_lit("compile_command"));
-  exec_commandf(app, command);
-}
-
 CUSTOM_COMMAND_SIG(debugger_start_debug)
 CUSTOM_DOC("Open the app in remedybg")
 {
@@ -143,7 +147,7 @@ CUSTOM_DOC("Continue execution")
   exec_commandf(app, string_u8_litexpr("rbg.exe continue-execution"));
 }
 
-CUSTOM_COMMAND_SIG(debugger_open_file_at_cursor)
+CUSTOM_COMMAND_SIG(D2_debugger_open_file_at_cursor)
 CUSTOM_DOC("Open current file in debugger")
 {
   exec_commandf(app, string_u8_litexpr("rbg.exe open-file {file} {line}"));
@@ -170,7 +174,16 @@ CUSTOM_DOC("Compile project using build.cpp")
   exec_commandf(app, command);
 }
 
-function void open_file_in_4coder_dir(Application_Links *app, S8 file)
+CUSTOM_COMMAND_SIG(compile_current_file)
+CUSTOM_DOC("Compile current file with clang")
+{
+  Scratch_Block scratch(app);
+  S8 command = def_get_config_string(scratch, vars_save_string_lit("compile_command"));
+  exec_commandf(app, command);
+}
+
+function void 
+open_file_in_4coder_dir(Application_Links *app, S8 file)
 {
   View_ID active_view = get_active_view(app, Access_Always);
   Scratch_Block scratch(app);
@@ -181,32 +194,29 @@ function void open_file_in_4coder_dir(Application_Links *app, S8 file)
   view_open_file(app, active_view, path.string, false);
 }
 
-CUSTOM_COMMAND_SIG(open_bindings)
+CUSTOM_COMMAND_SIG(C1_open_bindings)
 CUSTOM_DOC("Open hotkey file")
 {
   open_file_in_4coder_dir(app, SCu8("4coder_krzosa/bindings.4coder"));
 }
 
-CUSTOM_COMMAND_SIG(open_theme)
+CUSTOM_COMMAND_SIG(C2_open_snippets)
+CUSTOM_DOC("Open hotkey file")
+{
+  open_file_in_4coder_dir(app, SCu8("snippets.txt"));
+}
+
+CUSTOM_COMMAND_SIG(C3_open_theme)
 CUSTOM_DOC("Open theme file")
 {
   open_file_in_4coder_dir(app, SCu8("themes/kr.4coder"));
 }
 
-CUSTOM_COMMAND_SIG(explorer_here)
-CUSTOM_DOC("runs explorer in current dir")
-{
-  exec_commandf(app, string_u8_litexpr("explorer.exe ."));
-}
-
-CUSTOM_COMMAND_SIG(cmd_here)
-CUSTOM_DOC("runs cmd in current dir")
-{
-  exec_commandf(app, string_u8_litexpr("start cmd.exe ."));
-}
+///////////////////////////////////////
+// @Section: Project managment
 
 function FILE *
-open_file_in_4coder_dir(Arena *scratch, S8 filename, char *op) {
+fopen_file_in_4coder_dir(Arena *scratch, S8 filename, char *op) {
   S8 binary = system_get_path(scratch, SystemPath_Binary);
   S8 path = push_stringf(scratch, "%.*s%.*s\0", binary.size, binary.str, filename.size, filename.str);
   FILE *file = fopen((char *)path.str, op);
@@ -217,7 +227,7 @@ CUSTOM_COMMAND_SIG(last_project)
 CUSTOM_DOC("Opens last project")
 {
   Scratch_Block scratch(app);
-  FILE *file = open_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
+  FILE *file = fopen_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
   if(file) {
     S8 data = dump_file_handle(scratch, file);
     List_String_Const_u8 list = string_split(scratch, data, (u8 *)"\n", 1);
@@ -235,7 +245,7 @@ CUSTOM_COMMAND_SIG(projects_list)
 CUSTOM_DOC("Opens a project list")
 {
   Scratch_Block scratch(app);
-  FILE *file = open_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
+  FILE *file = fopen_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
   if(file) {
     S8 data = dump_file_handle(scratch, file);
     List_String_Const_u8 list = string_split(scratch, data, (u8 *)"\n", 1);
@@ -243,21 +253,22 @@ CUSTOM_DOC("Opens a project list")
     lister_set_query(lister, L("project path: "));
     lister_set_default_handlers(lister);
     
-    for(Node_String_Const_u8 *node = list.first; node; node=node->next) {
+    loop_sll(list.first, node) {
       S8 str = node->string;
       lister_add_item(lister, str, str, (void *)node, 0);
     }
     Lister_Result result = run_lister(app, lister);
     if(!result.canceled) {
       Node_String_Const_u8* ptr = (Node_String_Const_u8 *)result.user_data;
+      ptr->string = string_skip_chop_whitespace(ptr->string);
       if(ptr && ptr->string.size) {
-        FILE *write = open_file_in_4coder_dir(scratch, L("projects.txt"), "w");
+        FILE *write = fopen_file_in_4coder_dir(scratch, L("projects.txt"), "w");
         if(write) { // @Note: Reorder nodes and write so that opened node is first
           List_String_Const_u8 save_list = {};
           string_list_push(scratch, &save_list, ptr->string);
-          for(Node_String_Const_u8 *node = list.first; node; node=node->next) {
+          loop_sll(list.first, node) {
             if(node != ptr) {
-              string_list_push(scratch, &save_list, node->string);
+              string_list_push(scratch, &save_list, ptr->string = string_skip_chop_whitespace(node->string));
             }
           }
           S8 new_order = string_list_flatten(scratch, save_list, 0, L("\n"), 0, StringFill_NoTerminate);
@@ -272,7 +283,10 @@ CUSTOM_DOC("Opens a project list")
     fclose(file);
   }
   else {
-    log_string(app, L("Failed to fetch project file list for reading"));
+    Lister_Block lister(app, scratch);
+    lister_set_query(lister, L("projects.txt doesn't exist! Add projects using add_folder_to_project_list"));
+    lister_set_default_handlers(lister);
+    run_lister(app, lister);
   }
 }
 
@@ -280,14 +294,14 @@ CUSTOM_COMMAND_SIG(add_folder_to_project_list)
 CUSTOM_DOC("Opens a project list")
 {
   Scratch_Block scratch(app);
-  FILE *file = open_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
+  FILE *file = fopen_file_in_4coder_dir(scratch, L("projects.txt"), "rb");
   S8 data = L("");
   if(file) {
     data = dump_file_handle(scratch, file);
     fclose(file);
   }
   
-  file = open_file_in_4coder_dir(scratch, L("projects.txt"), "w");
+  file = fopen_file_in_4coder_dir(scratch, L("projects.txt"), "w");
   if(file) {
     S8 hot = push_hot_directory(app, scratch);
     S8 combined_power_of_will = push_stringf(scratch, "%.*s\n%.*s", E(data), E(hot));
@@ -303,7 +317,64 @@ CUSTOM_DOC("Kill current instance and make a new 4coder")
   exit_4coder(app);
 }
 
-////////////////////////////////
+CUSTOM_COMMAND_SIG(run_console_command)
+CUSTOM_DOC("Run console command")
+{
+  Scratch_Block scratch(app);
+  FILE *file = fopen_file_in_4coder_dir(scratch, L("console_commands.txt"), "rb");
+  S8 data = L("");
+  if(file) {
+    data = dump_file_handle(scratch, file);
+    fclose(file);
+  }
+  List_String_Const_u8 list = string_split(scratch, data, (u8 *)"\n", 1);
+  Lister_Block lister(app, scratch);
+  lister_set_query(lister, L("Command:"));
+  lister_set_default_handlers(lister);
+  loop_sll(list.first,node) {
+    node->string = string_skip_chop_whitespace(node->string);
+    lister_add_item(lister, node->string, node->string, (void *)node, 0);
+  }
+  
+  Lister_Result result = run_lister(app, lister);
+  if(!result.canceled) {
+    Node_String_Const_u8 *ptr = (Node_String_Const_u8 *)result.user_data;
+    if(!(ptr == 0 && result.text_field.size == 0)) {
+      String_Const_u8 command = L("");
+      FILE *write = fopen_file_in_4coder_dir(scratch, L("console_commands.txt"), "w");
+      if(write) {
+        S8 new_order = L("");
+        if(ptr) {
+          command = ptr->string;
+          List_String_Const_u8 save_list = {};
+          string_list_push(scratch, &save_list, ptr->string);
+          loop_sll(list.first, node) {
+            if(node != ptr) {
+              string_list_push(scratch, &save_list, node->string);
+            }
+          }
+          new_order = string_list_flatten(scratch, save_list, 0, L("\n"), 0, StringFill_NoTerminate);
+        }
+        else {
+          command = result.text_field;
+          List_String_Const_u8 save_list = {};
+          string_list_push(scratch, &save_list, command);
+          string_list_push(&save_list, &list);
+          new_order = string_list_flatten(scratch, save_list, 0, L("\n"), 0, StringFill_NoTerminate);
+        }
+        
+        if(command.size) {
+          exec_commandf(app, command);
+        }
+        fwrite(new_order.str, 1, new_order.size, write);
+        fclose(write);
+      }
+    }
+  }
+}
+
+///////////////////////////////////////
+// @Section: Snippet from file
 
 function List_String_Const_u8
 string_split_needle_dont_include(Arena *arena, String_Const_u8 string, String_Const_u8 needle){
@@ -360,7 +431,7 @@ get_snippet_from_user(Application_Links *app, Snippet2 *snippets, i32 snippet_co
   return(result);
 }
 
-CUSTOM_UI_COMMAND_SIG(_snippet_lister)
+CUSTOM_UI_COMMAND_SIG(snippet_lister_from_file)
 CUSTOM_DOC("Opens a snippet lister for inserting whole pre-written snippets of text.")
 {
   View_ID view = get_this_ctx_view(app, Access_ReadWrite);
@@ -369,7 +440,7 @@ CUSTOM_DOC("Opens a snippet lister for inserting whole pre-written snippets of t
     Scratch_Block array_alloc(app, scratch);
     Snippet2 *input_snippets = 0;
     u32 len = 0;
-    FILE *file = open_file_in_4coder_dir(scratch, L("snippets.txt"), "rb");
+    FILE *file = fopen_file_in_4coder_dir(scratch, L("snippets.txt"), "rb");
     if(file) {
       S8 data = dump_file_handle(scratch, file);
       *push_array(scratch, u8, 1) = 0; // null_terminate
@@ -379,14 +450,20 @@ CUSTOM_DOC("Opens a snippet lister for inserting whole pre-written snippets of t
       len = 0;
       for(Node_String_Const_u8 *node=list.first; node;) {
         if(node==0||node->next==0) break;
-        snippet->cursor_offset = (i32)string_find_first(node->string, L("$"), StringMatch_Exact);
-        snippet->mark_offset = (i32)string_find_first(node->string, L("$$"), StringMatch_Exact);
+        snippet->cursor_offset = (i32)string_find_first2(node->next->string, L("$"));
+        snippet->mark_offset = (i32)string_find_first2(node->next->string, L("$$"))-1;
         snippet->name = string_skip_chop_whitespace(node->string); 
         snippet->text = string_replace(scratch, node->next->string, L("$"), L(""));
         push_array(array_alloc, Snippet2, 1);
         node=node->next->next; len++; snippet++;
       }
       fclose(file);
+    }
+    else {
+      Lister_Block lister(app, scratch);
+      lister_set_query(lister, L("snippets.txt doesn't exist! Add snippets.txt to 4coder directory."));
+      lister_set_default_handlers(lister);
+      run_lister(app, lister);
     }
     
     if(len > 0) {
