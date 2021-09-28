@@ -232,10 +232,13 @@ CUSTOM_DOC("Opens last project")
     S8 data = dump_file_handle(scratch, file);
     List_String_Const_u8 list = string_split(scratch, data, (u8 *)"\n", 1);
     Node_String_Const_u8 *first = list.first;
-    if(first) {
-      close_all_code(app);
-      set_hot_directory(app, first->string);
-      open_all_code_recursive(app);
+    if(first && first->string.size) {
+      String8 string = string_skip_chop_whitespace(first->string);
+      if(string.size) {
+        close_all_code(app);
+        set_hot_directory(app, string);
+        open_all_code_recursive(app);
+      }
     }
     fclose(file);
   }
@@ -260,24 +263,24 @@ CUSTOM_DOC("Opens a project list")
     Lister_Result result = run_lister(app, lister);
     if(!result.canceled) {
       Node_String_Const_u8* ptr = (Node_String_Const_u8 *)result.user_data;
-      ptr->string = string_skip_chop_whitespace(ptr->string);
-      if(ptr && ptr->string.size) {
+      if(ptr) {
+        ptr->string = string_skip_chop_whitespace(ptr->string);
         FILE *write = fopen_file_in_4coder_dir(scratch, L("projects.txt"), "w");
         if(write) { // @Note: Reorder nodes and write so that opened node is first
           List_String_Const_u8 save_list = {};
           string_list_push(scratch, &save_list, ptr->string);
           loop_sll(list.first, node) {
-            if(node != ptr) {
-              string_list_push(scratch, &save_list, ptr->string = string_skip_chop_whitespace(node->string));
-            }
+            if(node != ptr) string_list_push(scratch, &save_list, node->string);
           }
           S8 new_order = string_list_flatten(scratch, save_list, 0, L("\n"), 0, StringFill_NoTerminate);
           fwrite(new_order.str, 1, new_order.size, write);
           fclose(write);
         }
-        close_all_code(app);
-        set_hot_directory(app, ptr->string);
-        open_all_code_recursive(app);
+        if(ptr->string.size) {
+          close_all_code(app);
+          set_hot_directory(app, ptr->string);
+          open_all_code_recursive(app);
+        }
       }
     }
     fclose(file);
