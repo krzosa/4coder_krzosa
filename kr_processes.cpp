@@ -203,7 +203,7 @@ CUSTOM_DOC("Open hotkey file")
 CUSTOM_COMMAND_SIG(C2_open_snippets)
 CUSTOM_DOC("Open hotkey file")
 {
-  open_file_in_4coder_dir(app, SCu8("snippets.txt"));
+  open_file_in_4coder_dir(app, SCu8("4coder_krzosa/snippets.txt"));
 }
 
 CUSTOM_COMMAND_SIG(C3_open_theme)
@@ -324,7 +324,8 @@ CUSTOM_COMMAND_SIG(run_console_command)
 CUSTOM_DOC("Run console command")
 {
   Scratch_Block scratch(app);
-  FILE *file = fopen_file_in_4coder_dir(scratch, L("console_commands.txt"), "rb");
+  FILE *file = fopen_file_in_4coder_dir(scratch, L("4coder_krzosa/console_commands.txt"), "rb");
+  if(!file) file = fopen_file_in_4coder_dir(scratch, L("console_commands.txt"), "rb");
   S8 data = L("");
   if(file) {
     data = dump_file_handle(scratch, file);
@@ -443,7 +444,8 @@ CUSTOM_DOC("Opens a snippet lister for inserting whole pre-written snippets of t
     Scratch_Block array_alloc(app, scratch);
     Snippet2 *input_snippets = 0;
     u32 len = 0;
-    FILE *file = fopen_file_in_4coder_dir(scratch, L("snippets.txt"), "rb");
+    FILE *file = fopen_file_in_4coder_dir(scratch, L("4coder_krzosa/snippets.txt"), "rb");
+    if(!file) file = fopen_file_in_4coder_dir(scratch, L("snippets.txt"), "rb");
     if(file) {
       S8 data = dump_file_handle(scratch, file);
       *push_array(scratch, u8, 1) = 0; // null_terminate
